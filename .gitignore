@@ -2,5 +2,4 @@
 /src/keys/rs512-4096-public.pem
 /src/tmp/
 /src/go.sum
-/src/.env.prod
-/src/.env.stg
+/src/.env

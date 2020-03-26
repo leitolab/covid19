@@ -13,7 +13,7 @@ EXPOSE 8080
 RUN apk update && apk add --no-cache ca-certificates
 
 WORKDIR /home/ieliot
-COPY ./src/.env /home/ieliot/.env
+COPY ./src/.env.prod /home/ieliot/.env
 COPY ./src/keys /home/ieliot/keys
 COPY --from=builder /ieliot/app /home/ieliot/app
 

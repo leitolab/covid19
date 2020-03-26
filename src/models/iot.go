@@ -6,7 +6,6 @@ import (
 	"ieliot/src/common"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -16,27 +15,8 @@ type Iot struct {
 	ID      string      `json:"_id" bson:"_id,omitempty"` // _id de mongo
 	Data    interface{} `json:"data"  bson:"data"`        // data del cliente
 	Device  string      `json:"d"  bson:"d"`              // producto al cual pertenece el cliente
-	Client  string      `json:"c"  bson:"c"`              // producto al cual pertenece el cliente
+	Client  string      `json:"c"  bson:"c,omitempty"`    // producto al cual pertenece el cliente
 	Created time.Time   `json:"t,omitempty" bson:"t"`     // fecha de creacion de la inserción
-}
-
-// Insert inserción de la data de iot en mongo con la estructura prefijada
-func (iot *Iot) Insert(product string) error {
-	// contexto timeout para la solicitud a mongo
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	// se ejecuta la insercion a la base de datos
-	collection := common.Client.Database(common.DATABASE).Collection(product)
-	res, err := collection.InsertOne(ctx, iot)
-	if err != nil {
-		return err
-	}
-	if oid, ok := res.InsertedID.(primitive.ObjectID); ok {
-		iot.ID = oid.Hex()
-	}
-
-	return nil
 }
 
 // Upsert actualizacion de la data de iot en mongo con la estructura prefijada
@@ -48,12 +28,23 @@ func (iot *Iot) Upsert(product string) error {
 	filter := bson.M{"d": iot.Device, "c": iot.Client}
 	update := bson.M{"$set": iot}
 
-	// se ejecuta la insercion a la base de datos
+	// se ejecuta el upsert para el mapa de localizacion
 	collection := common.Client.Database(common.DATABASE).Collection(product)
 	res, err := collection.UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
 	if err != nil {
 		return err
 	}
+
+	// se elimina el cliente para optimizar espacio pero se almacena para restituir en caso de
+	// posteriormente se requiera
+	client := iot.Client
+	iot.Client = ""
+	// se ejecuta la insercion a las localizaciones
+	collection = common.Client.Database(common.DATABASE).Collection("locations")
+	if _, err := collection.InsertOne(ctx, iot); err != nil {
+		return err
+	}
+	iot.Client = client
 
 	if res.MatchedCount == 0 && res.ModifiedCount == 0 && res.UpsertedCount == 0 {
 		return errors.New("upsert fail")
@@ -68,6 +59,7 @@ type data struct {
 
 // Near obtenemos los devices cercanos y actualizamos los contactos
 // db.covid19.createIndex({ "data.coor" : "2dsphere" })
+// db.locations.createIndex({ "data.coor" : "2dsphere" })
 func (iot *Iot) Near(product string) ([]string, error) {
 	data := iot.Data.(map[string]interface{})
 	// contexto timeout para la solicitud a mongo

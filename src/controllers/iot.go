@@ -44,24 +44,27 @@ func postIotHandler(c *fasthttp.RequestCtx) {
 	iot.Created = time.Now().UTC() // hora de registro en el sistema
 	iot.Data = data
 
+	// actualizamos el mapa de tics para la ubicacion
 	if err = iot.Upsert(origin.Product); err != nil {
 		common.SendJSON(c, &bson.M{"err": err.Error()})
 		return
 	}
 
+	// buscamos las personas en rango
 	var ids []string
 	if ids, err = iot.Near(origin.Product); err != nil {
 		common.SendJSON(c, &bson.M{"err": err.Error()})
 		return
 	}
 	if len(ids) > 0 {
+		// guardamos el contacto en caso de presentarse
 		if err := iot.Contact("contacts", &ids); err != nil {
 			common.SendJSON(c, &bson.M{"err": err.Error()})
 			return
 		}
 	}
 
-	// entregamos al usuario el id resultado de la inserción, esto puede servir para hacer una traza de inserciones
+	// entregamos el resultado de la transaccion
 	response := bson.M{}
 	response["success"] = true
 	// enviamos la respuesta al usuario
