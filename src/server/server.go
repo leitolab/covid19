@@ -23,7 +23,7 @@ func main() {
 	common.Configure()
 
 	// puerto estandar para desplegar el servicio
-	bindHost := flag.String("bind", "0.0.0.0:58080", "set bind host")
+	bindHost := flag.String("bind", "0.0.0.0:8080", "set bind host")
 	flag.Parse()
 
 	var err error
@@ -65,6 +65,6 @@ func mainHandler(c *fasthttp.RequestCtx) {
 		controllers.ContactHandler(c)
 
 	default:
-		c.Error("unexpected path", fasthttp.StatusBadRequest)
+		controllers.Default(c)
 	}
 }
