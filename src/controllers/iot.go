@@ -51,14 +51,14 @@ func postIotHandler(c *fasthttp.RequestCtx) {
 	}
 
 	// buscamos las personas en rango
-	var ids []string
-	if ids, err = iot.Near(origin.Product); err != nil {
+	var iots []models.Iot
+	if iots, err = iot.Near(origin.Product); err != nil {
 		common.SendJSON(c, &bson.M{"err": err.Error()})
 		return
 	}
-	if len(ids) > 0 {
+	if len(iots) > 0 {
 		// guardamos el contacto en caso de presentarse
-		if err := iot.Contact("contacts", &ids); err != nil {
+		if err := iot.Contact("contacts", &iots); err != nil {
 			common.SendJSON(c, &bson.M{"err": err.Error()})
 			return
 		}

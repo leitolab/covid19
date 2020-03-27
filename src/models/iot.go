@@ -60,7 +60,7 @@ type data struct {
 // Near obtenemos los devices cercanos y actualizamos los contactos
 // db.covid19.createIndex({ "data.coor" : "2dsphere" })
 // db.locations.createIndex({ "data.coor" : "2dsphere" })
-func (iot *Iot) Near(product string) ([]string, error) {
+func (iot *Iot) Near(product string) ([]Iot, error) {
 	data := iot.Data.(map[string]interface{})
 	// contexto timeout para la solicitud a mongo
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -73,14 +73,13 @@ func (iot *Iot) Near(product string) ([]string, error) {
 		bson.M{
 			"$geoNear": bson.M{
 				"near": bson.M{
-					"type":        "Point",
 					"coordinates": data["coor"],
 				},
 				"distanceField": "data.coor",
 				"maxDistance":   config.Accuracy,
 				"spherical":     true,
 			}},
-		bson.M{"$match": bson.M{"d": bson.M{"$ne": iot.Device}}},
+		// bson.M{"$match": bson.M{"d": bson.M{"$ne": iot.Device}}},
 	}
 
 	// se ejecuta la insercion a la base de datos
@@ -92,24 +91,24 @@ func (iot *Iot) Near(product string) ([]string, error) {
 	defer cur.Close(ctx)
 
 	// obtenemos los ids de contacto
-	var ids []string
+	var iots []Iot
 	for cur.Next(ctx) {
 		var mIot Iot
 		err := cur.Decode(&mIot)
 		if err != nil {
 			return nil, err
 		}
-		ids = append(ids, mIot.Device)
+		iots = append(iots, mIot)
 	}
 	if err := cur.Err(); err != nil {
 		return nil, err
 	}
 
-	return ids, nil
+	return iots, nil
 }
 
 // Contact ...
-func (iot *Iot) Contact(product string, ids *[]string) error {
+func (iot *Iot) Contact(product string, iots *[]Iot) error {
 	var err error
 	dataIot := iot.Data.(map[string]interface{})
 	// contexto timeout para la solicitud a mongo
@@ -118,9 +117,9 @@ func (iot *Iot) Contact(product string, ids *[]string) error {
 
 	// se ejecuta la insercion a la base de datos
 	collection := common.Client.Database(common.DATABASE).Collection(product)
-	for _, id := range *ids {
-		filter := bson.M{"a": iot.Device, "b": id}
-		update := bson.M{"a": iot.Device, "b": id, "t": time.Now().UTC(), "coor": dataIot["coor"]}
+	for _, iotb := range *iots {
+		filter := bson.M{"a": iot.Device, "b": iotb.Device}
+		update := bson.M{"a": iot.Device, "b": iotb.Device, "t": time.Now().UTC(), "coor_a": dataIot["coor"], "coor_b": iotb.Data}
 		_, err = collection.UpdateOne(ctx, filter, bson.M{"$set": update}, options.Update().SetUpsert(true))
 	}
 	if err != nil {
