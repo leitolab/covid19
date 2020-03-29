@@ -6,7 +6,7 @@
 
 read -p "Version? : " VERSION_KDD
 
-gcloud auth configure-docker
+# gcloud auth configure-docker
 export RUTA_KDD="fasthttp.dockerfile"
 export ZONA_KDD="us-east1-d"
 export NOMBRE_KDD="ieliot/covid19"

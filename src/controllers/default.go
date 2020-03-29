@@ -15,7 +15,7 @@ const ieliot = `  _ ______ _      _____ ____ _______
 									
 									`
 
-// Default ...
+// Default todo lo que no coincida con una ruta llega aquí
 func Default(c *fasthttp.RequestCtx) {
 	common.SendTEXT(c, ieliot)
 }

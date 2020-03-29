@@ -26,7 +26,7 @@ func ClientHandler(c *fasthttp.RequestCtx) {
 
 // Función de obtención de clients por id y por producto de forma intrínseca
 func getClientHandler(c *fasthttp.RequestCtx) {
-	// validamos que el token del dispositivo sea válido
+	// validamos que el token del dispositivo sea válido y obtenemos la información contenida
 	origin := &models.Device{}
 	if err := origin.ValidateToken(string(c.Request.Header.Peek("authorization")), 9); origin == nil || err != nil {
 		common.Forbidden(c)
@@ -61,7 +61,7 @@ func getClientHandler(c *fasthttp.RequestCtx) {
 
 // Función ingesta de un client
 func postClientHandler(c *fasthttp.RequestCtx) {
-	// validamos que el token del dispositivo sea válido
+	// validamos que el token del dispositivo sea válido y obtenemos la información contenida
 	origin := &models.Device{}
 	if err := origin.ValidateToken(string(c.Request.Header.Peek("authorization")), 9); origin == nil || err != nil {
 		common.Forbidden(c)
@@ -87,7 +87,7 @@ func postClientHandler(c *fasthttp.RequestCtx) {
 
 // Función de actualizacion de un client
 func putClientHandler(c *fasthttp.RequestCtx) {
-	// validamos que el token del dispositivo sea válido
+	// validamos que el token del dispositivo sea válido y obtenemos la información contenida
 	origin := &models.Device{}
 	if err := origin.ValidateToken(string(c.Request.Header.Peek("authorization")), 9); origin == nil || err != nil {
 		common.Forbidden(c)
@@ -113,7 +113,7 @@ func putClientHandler(c *fasthttp.RequestCtx) {
 
 // Función eliminacion de un client
 func deleteClientHandler(c *fasthttp.RequestCtx) {
-	// validamos que el token del dispositivo sea válido
+	// validamos que el token del dispositivo sea válido y obtenemos la información contenida
 	origin := &models.Device{}
 	if err := origin.ValidateToken(string(c.Request.Header.Peek("authorization")), 9); origin == nil || err != nil {
 		common.Forbidden(c)

@@ -17,7 +17,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// Funcion principal del servidor por aqui se inicia todo el proceso
+// Funcion principal del servidor por aquí se inicia todo el proceso
 func main() {
 	// se generan las variables globales a partir de variables del entorno
 	common.Configure()
@@ -31,14 +31,17 @@ func main() {
 		Handler: mainHandler,
 		Name:    "ieliot",
 	}
+
 	// Contexto timeout para la solicitud a mongo
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+
 	// conexion al servidor de mongo
 	common.Client, err = mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGO_URL")))
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	// creacion del listener a las variables bind host
 	var ln net.Listener
 	ln = common.GetListener(*bindHost)
@@ -49,20 +52,31 @@ func main() {
 	}
 }
 
-// Router del sistema dado que no se manejara un gran grupo de rutas esta solución es suficiente
+// Router del sistema dado que no se manejara un gran grupo de rutas esta solución es suficiente y eficiente
 func mainHandler(c *fasthttp.RequestCtx) {
 	path := c.Path()
 	switch *(*string)(unsafe.Pointer(&path)) {
+
 	case "/rest/v1/emit/":
 		controllers.IotHandler(c)
-	case "/rest/v1/login/":
-		controllers.LoginHandler(c)
-	case "/rest/v1/client/":
-		controllers.ClientHandler(c)
-	case "/rest/v1/device/":
-		controllers.DeviceHandler(c)
+
 	case "/rest/v1/contact/":
 		controllers.ContactHandler(c)
+
+	case "/rest/v1/people/":
+		controllers.PeopleHandler(c)
+
+	case "/rest/v1/place/":
+		controllers.PlaceHandler(c)
+
+	case "/rest/v1/device/":
+		controllers.DeviceHandler(c)
+
+	case "/rest/v1/login/":
+		controllers.LoginHandler(c)
+
+	case "/rest/v1/client/":
+		controllers.ClientHandler(c)
 
 	default:
 		controllers.Default(c)

@@ -29,6 +29,7 @@ func Configure() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+
 	// configuracion del nivel de logs para el sistema
 	if "DEBUG" == os.Getenv("ENVIRONMENT") {
 		log.SetLevel(log.DebugLevel)
@@ -38,12 +39,13 @@ func Configure() {
 
 	// configuracion del nombre de la base de datos a la cual se conectará
 	DATABASE = os.Getenv("DATABASE")
+
 	// carga de las claves de firmas de JWT, la clave privada es supremanente sensible
 	SIGNKEY = loadRSAPrivateKeyFromDisk("keys/rs512-4096-private.pem")
 	VERIFYKEY = loadRSAPublicKeyFromDisk("keys/rs512-4096-public.pem")
 }
 
-// Función encargada de cargar del disco la clave privada y parsearla de PEM a RSA key
+// Función encargada de leer del disco la clave privada y parsearla de PEM a RSA key
 func loadRSAPrivateKeyFromDisk(location string) *rsa.PrivateKey {
 	keyData, err := ioutil.ReadFile(location)
 	if err != nil {
@@ -56,7 +58,7 @@ func loadRSAPrivateKeyFromDisk(location string) *rsa.PrivateKey {
 	return signKey
 }
 
-// Función encargada de cargar del disco la clave publica y parsearla de PEM a RSA key
+// Función encargada de leer del disco la clave publica y parsearla de PEM a RSA key
 func loadRSAPublicKeyFromDisk(location string) *rsa.PublicKey {
 	keyData, err := ioutil.ReadFile(location)
 	if err != nil {

@@ -26,7 +26,7 @@ func DeviceHandler(c *fasthttp.RequestCtx) {
 
 // Función obtencion de un device
 func getDeviceHandler(c *fasthttp.RequestCtx) {
-	// validamos que el token del dispositivo sea válido
+	// validamos que el token del dispositivo sea válido y obtenemos la información contenida
 	origin := &models.Device{}
 	if err := origin.ValidateToken(string(c.Request.Header.Peek("authorization")), 9); origin == nil || err != nil {
 		common.Forbidden(c)
@@ -66,7 +66,7 @@ func getDeviceHandler(c *fasthttp.RequestCtx) {
 
 // Función de creación de un device
 func postDeviceHandler(c *fasthttp.RequestCtx) {
-	// validamos que el token del dispositivo sea válido
+	// validamos que el token del dispositivo sea válido y obtenemos la información contenida
 	// origin := &models.Device{}
 	// if err := origin.ValidateToken(string(c.Request.Header.Peek("authorization")), 0); origin == nil || err != nil {
 	// 	common.Forbidden(c)
@@ -94,7 +94,7 @@ func postDeviceHandler(c *fasthttp.RequestCtx) {
 
 // Función de actualizacion de device
 func putDeviceHandler(c *fasthttp.RequestCtx) {
-	// validamos que el token del dispositivo sea válido
+	// validamos que el token del dispositivo sea válido y obtenemos la información contenida
 	origin := &models.Device{}
 	if err := origin.ValidateToken(string(c.Request.Header.Peek("authorization")), 1); origin == nil || err != nil {
 		common.Forbidden(c)
@@ -124,7 +124,7 @@ func putDeviceHandler(c *fasthttp.RequestCtx) {
 
 // Función de eliminación de un device
 func deleteDeviceHandler(c *fasthttp.RequestCtx) {
-	// validamos que el token del dispositivo sea válido
+	// validamos que el token del dispositivo sea válido y obtenemos la información contenida
 	origin := &models.Device{}
 	if err := origin.ValidateToken(string(c.Request.Header.Peek("authorization")), 9); origin == nil || err != nil {
 		common.Forbidden(c)

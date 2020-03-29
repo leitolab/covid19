@@ -230,16 +230,6 @@ func (device *Device) DeleteOne() error {
 	return nil
 }
 
-// MustRefresh fucnion de validacion de cercania de vencimiento de token
-func (device *Device) MustRefresh() bool {
-	// verificamos si esta a menos de dos horas del vencimiento del token,
-	// en cuyo caso se le informa al cliente que debe refrescar el token,
-	if int64(device.Expires) < time.Now().Add(2*time.Hour).UTC().Unix() {
-		return true
-	}
-	return false
-}
-
 // ====================================================================================================
 //
 // 	Funciones con fines utilitarios para la estructura device
@@ -310,24 +300,4 @@ func (device *Device) ValidateToken(tokenString string, scope int8) error {
 
 	// si todo esta ok se regresa el dispositivo
 	return nil
-}
-
-// IsReady validamos que ese dispositivo este listo en base de datos
-func (device *Device) IsReady() bool {
-	// Parseamos el id a una estructura de id de mongo
-	deviceID, err := primitive.ObjectIDFromHex(device.ID)
-	if err != nil {
-		return false
-	}
-
-	// contexto timeout para la solicitud a mongo
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	// se ejecuta la busqueda a la base de datos
-	collection := common.Client.Database(common.DATABASE).Collection("devices")
-	if err := collection.FindOne(ctx, bson.M{"_id": deviceID, "product": device.Product, "status": 1}).Decode(device); err != nil {
-		return false
-	}
-	return true
 }

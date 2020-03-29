@@ -19,9 +19,9 @@ func IotHandler(c *fasthttp.RequestCtx) {
 	}
 }
 
-// Funcion de alimento de datos de los dispositivos iot
+// Función encargada de manejar la emision de datos de los usuarios
 func postIotHandler(c *fasthttp.RequestCtx) {
-	// validamos que el token del dispositivo sea válido
+	// validamos que el token del dispositivo sea válido y obtenemos la información contenida
 	var err error
 	origin := &models.Device{}
 	if err = origin.ValidateToken(string(c.Request.Header.Peek("authorization")), 1); origin == nil || err != nil {
@@ -31,20 +31,20 @@ func postIotHandler(c *fasthttp.RequestCtx) {
 
 	// estructura para parsear la entrada, se espera un json válido
 	var data interface{}
-	// paseamos la informacion del dispositivo, se espera un json valido en caso de que no se consiga se responder con un bad request
+	// paseamos la informacion del dispositivo, se espera un json valido. En caso de que no se consiga se responde con un bad request
 	if err = json.Unmarshal(c.PostBody(), &data); err != nil {
 		common.BadRequest(c)
 		return
 	}
 
-	iot := models.Iot{}
 	// adicionamos información de origen de la data en base al token proporcionado
+	iot := models.Iot{}
 	iot.Device = origin.ID         // id del dispositivo
 	iot.Client = origin.Client     // id del cliente del cual pertenece el dispositivo
 	iot.Created = time.Now().UTC() // hora de registro en el sistema
 	iot.Data = data
 
-	// actualizamos el mapa de tics para la ubicacion
+	// actualizamos el mapa de tics para la ubicación
 	if err = iot.Upsert(origin.Product); err != nil {
 		common.SendJSON(c, &bson.M{"err": err.Error()})
 		return
@@ -56,17 +56,14 @@ func postIotHandler(c *fasthttp.RequestCtx) {
 		common.SendJSON(c, &bson.M{"err": err.Error()})
 		return
 	}
+
 	if len(iots) > 0 {
-		// guardamos el contacto en caso de presentarse
-		if err := iot.Contact("contacts", &iots); err != nil {
-			common.SendJSON(c, &bson.M{"err": err.Error()})
-			return
-		}
+		// intentamos guardar los contactos en caso de presentarse
+		iot.InsertContact("contacts", &iots)
 	}
 
-	// entregamos el resultado de la transaccion
+	// entregamos el resultado de la transacción al usuario
 	response := bson.M{}
 	response["success"] = true
-	// enviamos la respuesta al usuario
 	common.SendJSON(c, &response)
 }
