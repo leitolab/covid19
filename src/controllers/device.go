@@ -67,11 +67,12 @@ func getDeviceHandler(c *fasthttp.RequestCtx) {
 // Función de creación de un device
 func postDeviceHandler(c *fasthttp.RequestCtx) {
 	// validamos que el token del dispositivo sea válido y obtenemos la información contenida
-	// origin := &models.Device{}
-	// if err := origin.ValidateToken(string(c.Request.Header.Peek("authorization")), 0); origin == nil || err != nil {
-	// 	common.Forbidden(c)
-	// 	return
-	// }
+	origin := &models.Device{}
+	if err := origin.ValidateToken(string(c.Request.Header.Peek("authorization")), 0); origin == nil || err != nil {
+		common.Forbidden(c)
+		return
+	}
+
 	// estructura para parsear la entrada, se espera un json válido
 	device := models.Device{}
 	if err := json.Unmarshal(c.PostBody(), &device); err != nil {
