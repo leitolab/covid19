@@ -44,21 +44,21 @@ func getPlaceHandler(c *fasthttp.RequestCtx) {
 		common.SendJSON(c, &bson.M{"err": "params are required: lat"})
 		return
 	}
-	place.Coor[0] = float64frombytes(arg)
+	place.Coor[0] = float64Frombytes(arg)
 
 	// extracción de la longitud
 	if arg = args.Peek("lon"); arg == nil {
 		common.SendJSON(c, &bson.M{"err": "params are required: lon"})
 		return
 	}
-	place.Coor[1] = float64frombytes(arg)
+	place.Coor[1] = float64Frombytes(arg)
 
 	// extracción de la precisión
 	if arg = args.Peek("accuracy"); arg == nil {
 		common.SendJSON(c, &bson.M{"err": "params are required: accuracy"})
 		return
 	}
-	place.Accuracy = float64frombytes(arg)
+	place.Accuracy = float64Frombytes(arg)
 
 	// buscamos los lugares en rango
 	var places []models.Place

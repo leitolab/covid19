@@ -19,7 +19,7 @@ func PeopleHandler(c *fasthttp.RequestCtx) {
 }
 
 // convertimos el parámetro a flotante
-func float64frombytes(bytes []byte) float64 {
+func float64Frombytes(bytes []byte) float64 {
 	f, err := strconv.ParseFloat(string(bytes), 64)
 	if err != nil {
 		return 0.0
@@ -49,21 +49,21 @@ func getPeopleHandler(c *fasthttp.RequestCtx) {
 		common.SendJSON(c, &bson.M{"err": "params are required: lat"})
 		return
 	}
-	people.Coor[0] = float64frombytes(arg)
+	people.Coor[0] = float64Frombytes(arg)
 
 	// extracción de la longitud
 	if arg = args.Peek("lon"); arg == nil {
 		common.SendJSON(c, &bson.M{"err": "params are required: lon"})
 		return
 	}
-	people.Coor[1] = float64frombytes(arg)
+	people.Coor[1] = float64Frombytes(arg)
 
 	// extracción de la precisión
 	if arg = args.Peek("accuracy"); arg == nil {
 		common.SendJSON(c, &bson.M{"err": "params are required: accuracy"})
 		return
 	}
-	people.Accuracy = float64frombytes(arg)
+	people.Accuracy = float64Frombytes(arg)
 
 	// buscamos las personas en rango
 	var peoples []models.People
