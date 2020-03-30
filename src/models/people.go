@@ -23,7 +23,7 @@ func (people *People) FindNear() ([]People, error) {
 	defer cancel()
 
 	// verificamos que la emisión solo haya sido hasta hace un minuto
-	t := time.Now()
+	t := time.Now().UTC()
 	td := t.Add(time.Duration(-1) * time.Minute) // 1 minuto
 
 	query := []bson.M{

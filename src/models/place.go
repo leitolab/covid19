@@ -35,7 +35,7 @@ func (place *Place) FindNear() ([]Place, error) {
 	config := Config{}
 	config.GetConfig()
 
-	t := time.Now()
+	t := time.Now().UTC()
 	td := t.AddDate(0, 0, -3) // 72 horas de vida del virus
 
 	query := []bson.M{

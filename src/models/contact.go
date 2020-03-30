@@ -31,7 +31,7 @@ func (contact *Contact) GetContactIds(device string) ([]primitive.ObjectID, erro
 	config.GetConfig()
 
 	// dias atrás segun la configuración
-	t := time.Now()
+	t := time.Now().UTC()
 	td := t.AddDate(0, 0, config.Delta)
 
 	// se ejecuta la consulta a la base de datos

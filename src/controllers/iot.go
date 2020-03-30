@@ -59,7 +59,20 @@ func postIotHandler(c *fasthttp.RequestCtx) {
 
 	if len(iots) > 0 {
 		// intentamos guardar los contactos en caso de presentarse
-		iot.InsertContact("contacts", &iots)
+		iot.InsertContact(&iots)
+	}
+
+	// buscamos las localizaciones en rango
+	var places []models.Place
+	if places, err = iot.NearPlaces(origin.Product); err != nil {
+		common.SendJSON(c, &bson.M{"err": err.Error()})
+		return
+	}
+
+	if len(places) > 0 {
+		// intentamos guardar los contactos en caso de presentarse
+		iot.InsertContactPlaces(&places)
+		iot.UpdateRiskPlaces(&places)
 	}
 
 	// entregamos el resultado de la transacción al usuario
