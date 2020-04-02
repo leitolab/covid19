@@ -51,6 +51,8 @@ func getRoute2Handler(c *fasthttp.RequestCtx) {
 		placeBson["cases"] = place.GetInfected(placeBson["_id"].(string))
 	}
 
+	var total0 time.Time
+	var total1 time.Time
 	lenPlaces := len(places)
 	for i := 0; i < lenPlaces-1; i++ {
 		timerange0 := places[i]["timeRange"].(bson.M)
@@ -60,26 +62,36 @@ func getRoute2Handler(c *fasthttp.RequestCtx) {
 		t0 := timerange0["start"].(primitive.DateTime).Time()
 		t1 := timerange0["end"].(primitive.DateTime).Time()
 
+		if i == 0 {
+			total0 = t0
+		}
+		if i == lenPlaces-2 {
+			total1 = t1
+		}
+
 		timerange0["start"] = fmt.Sprintf("%d:%d", t0.Hour(), t0.Minute())
 		timerange0["end"] = fmt.Sprintf("%d:%d", t1.Hour(), t1.Minute())
 		places[i]["timeRange"] = timerange0
 
 		places[i]["duration"] = fmt.Sprintf("%v", t1.Sub(t0))
 	}
+
 	if lenPlaces > 1 {
 		timerange0 := places[lenPlaces-1]["timeRange"].(bson.M)
 		t0 = timerange0["start"].(primitive.DateTime).Time()
 		t1 = timerange0["end"].(primitive.DateTime).Time()
+		total1 = t1
 
 		timerange0["start"] = fmt.Sprintf("%d:%d", t0.Hour(), t0.Minute())
 		timerange0["end"] = fmt.Sprintf("%d:%d", t1.Hour(), t1.Minute())
-
 		places[lenPlaces-1]["duration"] = "0h0m0s"
 		places[lenPlaces-1]["timeRange"] = timerange0
 	}
+
 	for i := 0; i < lenPlaces; i++ {
 		delete(places[i], "_id")
 	}
+	duration := fmt.Sprintf("%v", total1.Sub(total0))
 
-	common.SendJSON(c, &bson.M{"places": places})
+	common.SendJSON(c, &bson.M{"places": places, "duration": duration})
 }
