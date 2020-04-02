@@ -30,7 +30,7 @@ func (login *Login) LoginDevice() error {
 	// Lo buscamos dentro de mongo, en caso de no existir se retorna un error estándar por seguridad
 	var device Device
 	collection := common.Client.Database(common.DATABASE).Collection("devices")
-	if err := collection.FindOne(ctx, bson.M{"data.phone": login.Username}).Decode(&device); err != nil {
+	if err := collection.FindOne(ctx, bson.M{"phone": login.Username}).Decode(&device); err != nil {
 		return err
 	}
 

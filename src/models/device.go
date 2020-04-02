@@ -16,6 +16,7 @@ import (
 type Device struct {
 	ID       string     `json:"_id,omitempty" bson:"_id,omitempty"`  // _id de mongo
 	Data     bson.M     `json:"data,required"`                       // data del device
+	Phone    string     `json:"phone,bson:"phone,"`                  // telefono del registro
 	Password string     `json:"password,omitempty"`                  // Se debe omitir siempre en los json
 	Client   string     `json:"client,0mitempty"`                    // propietario del dispositvo
 	Product  string     `json:"product,omitempty"`                   // producto al cual pertenece el dispositivo, ej: gs
@@ -112,6 +113,10 @@ func (device *Device) InsertOne() error {
 	if device.Data == nil {
 		return errors.New("params are required: data")
 	}
+	device.Phone = device.Data["phone"].(string)
+	if device.Phone == "" {
+		return errors.New("params are required: phone")
+	}
 
 	if err := device.changePassword(); err != nil {
 		return err
@@ -164,11 +169,11 @@ func (device *Device) UpdateOne() error {
 		return err
 	}
 
-	if device.Password != "" {
-		if err := device.changePassword(); err != nil {
-			return err
-		}
-	}
+	// if device.Password != "" {
+	// 	if err := device.changePassword(); err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	now := time.Now().UTC()
 	device.Updated = &now
@@ -179,9 +184,9 @@ func (device *Device) UpdateOne() error {
 		"scope":  device.Scope,
 		"client": device.Client,
 	}
-	if device.Password != "" {
-		mUpdate["password"] = device.Password
-	}
+	// if device.Password != "" {
+	// 	mUpdate["password"] = device.Password
+	// }
 	filter := bson.M{"_id": deviceID, "product": device.Product}
 	update := bson.M{"$set": mUpdate}
 
