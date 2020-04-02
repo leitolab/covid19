@@ -230,6 +230,107 @@ func (device *Device) DeleteOne() error {
 	return nil
 }
 
+// FindContactByTime encontramos los lugares con los cuales tuvo contacto en una ventana de tiempo
+func (device *Device) FindContactByTime(t0, t1 time.Time) ([]interface{}, error) {
+	// contexto timeout para la solicitud a mongo
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	query := []bson.M{
+		bson.M{"$match": bson.M{"t": bson.M{"$gte": t0, "$lte": t1}, "a": device.ID}},
+		bson.M{"$project": bson.M{"_id": 0, "place": 1}},
+		bson.M{"$sort": bson.M{"t": 1}},
+		bson.M{"$limit": 100},
+	}
+
+	// se ejecuta la insercion a la base de datos
+	collection := common.Client.Database(common.DATABASE).Collection("contacts_places")
+	cur, err := collection.Aggregate(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+
+	// obtenemos los ids de contacto
+	var places []interface{}
+	for cur.Next(ctx) {
+		var mPlaceInt bson.M
+		err := cur.Decode(&mPlaceInt)
+		if err != nil {
+			return nil, err
+		}
+
+		mPlace := mPlaceInt["place"]
+		places = append(places, mPlace)
+	}
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+
+	return places, nil
+}
+
+func mRiskLevel(risk float64) string {
+	if risk < 33 {
+		return "low"
+	} else if risk < 66 {
+		return "meddium"
+	}
+	return "high"
+}
+
+// FindContactByDay encontramos los lugares con los cuales tuvo contacto en un dia
+func (device *Device) FindContactByDay(t0, t1 time.Time) ([]bson.M, error) {
+	// contexto timeout para la solicitud a mongo
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	query := []bson.M{
+		bson.M{"$match": bson.M{"t": bson.M{"$gte": t0, "$lte": t1}, "a": device.ID}},
+		bson.M{"$project": bson.M{"_id": 0, "place": 1, "t": 1}},
+		bson.M{"$sort": bson.M{"t": 1}},
+		bson.M{"$limit": 300},
+	}
+
+	// se ejecuta la insercion a la base de datos
+	collection := common.Client.Database(common.DATABASE).Collection("contacts_places")
+	cur, err := collection.Aggregate(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+
+	// obtenemos los ids de contacto
+	var places []bson.M
+	for cur.Next(ctx) {
+		var mPlaceInt bson.M
+		err := cur.Decode(&mPlaceInt)
+		if err != nil {
+			return nil, err
+		}
+		var mPlace Place
+		bsonBytes, _ := bson.Marshal(mPlaceInt["place"])
+		bson.Unmarshal(bsonBytes, &mPlace)
+		front := bson.M{
+			"_id":         mPlace.ID,
+			"place":       mPlace.Data["title"],
+			"description": mPlace.Data["description"],
+			"riskLevel":   mRiskLevel(mPlace.Data["risk"].(float64)),
+			"cases":       0,
+			"timeRange": bson.M{
+				"start": mPlaceInt["t"],
+				"end":   mPlaceInt["t"],
+			},
+		}
+		places = append(places, front)
+	}
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+
+	return places, nil
+}
+
 // ====================================================================================================
 //
 // 	Funciones con fines utilitarios para la estructura device
@@ -300,43 +401,4 @@ func (device *Device) ValidateToken(tokenString string, scope int8) error {
 
 	// si todo esta ok se regresa el dispositivo
 	return nil
-}
-
-// FindContactByTime encontramos los lugares con los cuales tuvo contacto en una ventana de tiempo
-func (device *Device) FindContactByTime(t0, t1 time.Time) ([]interface{}, error) {
-	// contexto timeout para la solicitud a mongo
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	query := []bson.M{
-		bson.M{"$match": bson.M{"t": bson.M{"$gte": t0, "$lte": t1}, "a": device.ID}},
-		bson.M{"$project": bson.M{"_id": 0, "place": 1}},
-		bson.M{"$limit": 100},
-	}
-
-	// se ejecuta la insercion a la base de datos
-	collection := common.Client.Database(common.DATABASE).Collection("contacts_places")
-	cur, err := collection.Aggregate(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-	defer cur.Close(ctx)
-
-	// obtenemos los ids de contacto
-	var places []interface{}
-	for cur.Next(ctx) {
-		var mPlaceInt bson.M
-		err := cur.Decode(&mPlaceInt)
-		if err != nil {
-			return nil, err
-		}
-
-		mPlace := mPlaceInt["place"]
-		places = append(places, mPlace)
-	}
-	if err := cur.Err(); err != nil {
-		return nil, err
-	}
-
-	return places, nil
 }

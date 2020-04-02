@@ -69,6 +69,9 @@ func mainHandler(c *fasthttp.RequestCtx) {
 	case "/rest/v1/route/":
 		controllers.RouteHandler(c)
 
+	case "/rest/v1/route2/":
+		controllers.Route2Handler(c)
+
 	case "/rest/v1/place/":
 		controllers.PlaceHandler(c)
 

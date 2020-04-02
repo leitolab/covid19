@@ -130,3 +130,20 @@ func (place *Place) DeleteOne() error {
 
 	return nil
 }
+
+// GetInfected ...
+func (place *Place) GetInfected(idString string) int64 {
+	filter := bson.M{"b": idString, "coor_a.infected": 1}
+
+	// contexto timeout para la solicitud a mongo
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	// se ejecuta el conteo de usuarios infectados y que esten en mis ids de contacto
+	collection := common.Client.Database(common.DATABASE).Collection("contact_places")
+	count, err := collection.CountDocuments(ctx, filter)
+	if err != nil {
+		return 0
+	}
+
+	return count
+}

@@ -10,7 +10,7 @@ RUN go build -o app -gcflags='-l=4' -ldflags="-s -w" ./server
 FROM alpine:3.11.2
 EXPOSE 8080
 
-RUN apk update && apk add --no-cache ca-certificates
+RUN apk update && apk add --no-cache ca-certificates tzdata
 
 WORKDIR /home/ieliot
 COPY ./src/.env.prod /home/ieliot/.env
