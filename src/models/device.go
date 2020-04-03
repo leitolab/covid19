@@ -14,17 +14,18 @@ import (
 // Device estructura del dispositivo a nivel de base de datos pero tambien a nivel de JWT
 // Estado de infección en data.infected 0: no infectado, 1: infectado, 2 recuperado, 3: muerto
 type Device struct {
-	ID       string     `json:"_id,omitempty" bson:"_id,omitempty"`  // _id de mongo
-	Data     bson.M     `json:"data,required"`                       // data del device
-	Phone    string     `json:"phone,bson:"phone,"`                  // telefono del registro
-	Password string     `json:"password,omitempty"`                  // Se debe omitir siempre en los json
-	Client   string     `json:"client,0mitempty"`                    // propietario del dispositvo
-	Product  string     `json:"product,omitempty"`                   // producto al cual pertenece el dispositivo, ej: gs
-	Expires  int64      `json:"expires,omitempty" bson:",omitempty"` // Solo se una a nivel de JWT
-	Scope    int8       `json:"scope,omitempty" `                    // alcance de privilegios del dispositivo
-	Status   int8       `json:"status,omitempty"`                    // bandera para saber si el dispositivo esta activo en la plataforma
-	Created  *time.Time `json:"created,omitempty"`                   // fecha de creacion del usuario
-	Updated  *time.Time `json:"updated,omitempty"`                   // fecha de actualizacion del usuario
+	ID          string     `json:"_id,omitempty" bson:"_id,omitempty"`  // _id de mongo
+	Data        bson.M     `json:"data,required"`                       // data del device
+	Phone       string     `json:"phone,bson:"phone,"`                  // telefono del registro
+	Password    string     `json:"password,omitempty"`                  // Se debe omitir siempre en los json
+	Client      string     `json:"client,0mitempty"`                    // propietario del dispositvo
+	Product     string     `json:"product,omitempty"`                   // producto al cual pertenece el dispositivo, ej: gs
+	Expires     int64      `json:"expires,omitempty" bson:",omitempty"` // Solo se una a nivel de JWT
+	Scope       int8       `json:"scope,omitempty" `                    // alcance de privilegios del dispositivo
+	Status      int8       `json:"status,omitempty"`                    // bandera para saber si el dispositivo esta activo en la plataforma
+	SymptomLast []int64    `json:"symptom" bson:"symptom_last"`         // ultimos sintomas reportados por el usuario
+	Created     *time.Time `json:"created,omitempty"`                   // fecha de creacion del usuario
+	Updated     *time.Time `json:"updated,omitempty"`                   // fecha de actualizacion del usuario
 }
 
 // FindOne Obtenemos de la base de datos un device dado su id
@@ -150,15 +151,6 @@ func (device *Device) UpdateOne() error {
 	if device.ID == "" {
 		return errors.New("params are required: _id")
 	}
-	if device.Client == "" {
-		return errors.New("params are required: client")
-	}
-	if device.Scope == 0 {
-		return errors.New("params are required: scope")
-	}
-	if device.Status == 0 {
-		return errors.New("params are required: status")
-	}
 	if device.Data == nil {
 		return errors.New("params are required: data")
 	}
@@ -169,26 +161,14 @@ func (device *Device) UpdateOne() error {
 		return err
 	}
 
-	// if device.Password != "" {
-	// 	if err := device.changePassword(); err != nil {
-	// 		return err
-	// 	}
-	// }
-
 	now := time.Now().UTC()
 	device.Updated = &now
 
-	mUpdate := bson.M{
-		"data":   device.Data,
-		"status": device.Status,
-		"scope":  device.Scope,
-		"client": device.Client,
-	}
-	// if device.Password != "" {
-	// 	mUpdate["password"] = device.Password
-	// }
 	filter := bson.M{"_id": deviceID, "product": device.Product}
-	update := bson.M{"$set": mUpdate}
+	update := bson.M{"$set": bson.M{
+		"data.infected":           device.Data["infected"],
+		"data.infected_timestamp": time.Now().UTC(),
+	}}
 
 	// contexto timeout para la solicitud a mongo
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

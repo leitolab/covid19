@@ -28,38 +28,18 @@ func DeviceHandler(c *fasthttp.RequestCtx) {
 func getDeviceHandler(c *fasthttp.RequestCtx) {
 	// validamos que el token del dispositivo sea válido y obtenemos la información contenida
 	origin := &models.Device{}
-	if err := origin.ValidateToken(string(c.Request.Header.Peek("authorization")), 9); origin == nil || err != nil {
+	if err := origin.ValidateToken(string(c.Request.Header.Peek("authorization")), 1); origin == nil || err != nil {
 		common.Forbidden(c)
 		return
 	}
 
-	// obtenemos los query params
-	args := c.QueryArgs()
-	// creamos un client con el producto del token de origen
-	device := models.Device{Product: origin.Product}
-
 	// intentamos obtener un device por _id
-	if id := args.Peek("_id"); id != nil {
-		device.ID = string(id)
-		if err := device.FindOne(); err != nil {
-			common.SendJSON(c, &bson.M{"err": err.Error()})
-			return
-		}
-		common.SendJSON(c, &bson.M{"device": &device})
+	if err := origin.FindOne(); err != nil {
+		common.SendJSON(c, &bson.M{"err": err.Error()})
 		return
 	}
-
-	// se obtiene la lista de los devices por cliente
-	if client := args.Peek("client"); client != nil {
-		device.Client = string(client)
-		devices, err := device.FindByClient()
-		if err != nil {
-			common.SendJSON(c, &bson.M{"err": err.Error()})
-			return
-		}
-		common.SendJSON(c, &bson.M{"device": &devices})
-		return
-	}
+	common.SendJSON(c, &bson.M{"device": &origin})
+	return
 
 	common.BadRequest(c)
 }

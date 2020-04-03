@@ -131,7 +131,7 @@ func (iot *Iot) InsertContact(iots *[]Iot) {
 	collection := common.Client.Database(common.DATABASE).Collection("contacts")
 	for _, iotb := range *iots {
 		filter := bson.M{"a": iot.Device, "b": iotb.Device}
-		update := bson.M{"a": iot.Device, "b": iotb.Device, "t": time.Now().UTC(), "coor_a": iot.Data, "coor_b": iotb.Data}
+		update := bson.M{"t": time.Now().UTC(), "coor_a": iot.Data, "coor_b": iotb.Data}
 		collection.UpdateOne(ctx, filter, bson.M{"$set": update}, options.Update().SetUpsert(true))
 	}
 }
@@ -202,7 +202,7 @@ func (iot *Iot) InsertContactPlaces(places *[]Place) {
 	collection := common.Client.Database(common.DATABASE).Collection("contacts_places")
 	for _, place := range *places {
 		filter := bson.M{"a": iot.Device, "b": place.ID}
-		update := bson.M{"a": iot.Device, "b": place.ID, "t": time.Now().UTC(), "coor_a": iot.Data, "place": place}
+		update := bson.M{"t": time.Now().UTC(), "coor_a": iot.Data, "place": place}
 		collection.UpdateOne(ctx, filter, bson.M{"$set": update}, options.Update().SetUpsert(true))
 	}
 }

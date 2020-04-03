@@ -139,7 +139,7 @@ func (place *Place) GetInfected(idString string) int64 {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	// se ejecuta el conteo de usuarios infectados y que esten en mis ids de contacto
-	collection := common.Client.Database(common.DATABASE).Collection("contact_places")
+	collection := common.Client.Database(common.DATABASE).Collection("contacts_places")
 	count, err := collection.CountDocuments(ctx, filter)
 	if err != nil {
 		return 0

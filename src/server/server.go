@@ -66,11 +66,14 @@ func mainHandler(c *fasthttp.RequestCtx) {
 	case "/rest/v1/people/":
 		controllers.PeopleHandler(c)
 
-	case "/rest/v1/route/":
-		controllers.RouteHandler(c)
-
 	case "/rest/v1/route2/":
 		controllers.Route2Handler(c)
+
+	case "/rest/v1/symptom/":
+		controllers.SymptomHandler(c)
+
+	case "/rest/v1/route/":
+		controllers.RouteHandler(c)
 
 	case "/rest/v1/place/":
 		controllers.PlaceHandler(c)
@@ -80,6 +83,9 @@ func mainHandler(c *fasthttp.RequestCtx) {
 
 	case "/rest/v1/login/":
 		controllers.LoginHandler(c)
+
+	case "/rest/v1/task/":
+		controllers.TaskHandler(c)
 
 	case "/rest/v1/client/":
 		controllers.ClientHandler(c)
