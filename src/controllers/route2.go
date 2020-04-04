@@ -76,9 +76,12 @@ func getRoute2Handler(c *fasthttp.RequestCtx) {
 		places[i]["duration"] = fmt.Sprintf("%v", t1.Sub(t0))
 	}
 
-	if lenPlaces > 1 {
+	if lenPlaces >= 1 {
 		timerange0 := places[lenPlaces-1]["timeRange"].(bson.M)
 		t0 = timerange0["start"].(primitive.DateTime).Time()
+		if lenPlaces == 1 {
+			total0 = t0
+		}
 		t1 = timerange0["end"].(primitive.DateTime).Time()
 		total1 = t1
 
