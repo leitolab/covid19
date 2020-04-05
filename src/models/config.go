@@ -10,7 +10,7 @@ import (
 
 // Config ...
 type Config struct {
-	Accuracy float32 `json:"accuracy,required" bson:"accuracy"` // data del cliente
+	Accuracy float64 `json:"accuracy,required" bson:"accuracy"` // data del cliente
 	Delta    int     `json:"delta,required" bson:"delta"`       // producto al cual pertenece el cliente
 }
 

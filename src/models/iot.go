@@ -20,9 +20,56 @@ type Iot struct {
 	Created time.Time   `json:"t,omitempty" bson:"t"`     // fecha de creacion de la inserción
 }
 
+type iotData struct {
+	Coor []float64 `json:"coor"  bson:"coor"` // data del cliente
+}
+
+// Iot estructura para manejar los envios de datos de los dispositivos
+type iotLigth struct {
+	ID   string  `json:"_id" bson:"_id,omitempty"` // _id de mongo
+	Data iotData `json:"data"  bson:"data"`        // data del cliente
+}
+
+// facilidad de calculos en cpu
+func (iot *Iot) distance(iot2 *iotLigth) float64 {
+	data := iot.Data.(map[string]interface{})
+	coor := data["coor"].([]interface{})
+	x := coor[0].(float64)
+	y := coor[1].(float64)
+
+	if len(iot2.Data.Coor) != 2 {
+		return 1000
+	}
+
+	return distanceCoor(x, y, iot2.Data.Coor[0], iot2.Data.Coor[1])
+}
+
+// mustInsert carga para los servidores pero otorgo más capacidad de almacenamiento
+func (iot *Iot) mustInsert(product string) float64 {
+	// data empaquetada que envió el usuario necesitamos las coordenadas para determinar
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// filtro a la base de datos para buscar mi ultima posicion
+	query := bson.M{"d": iot.Device}
+
+	// se ejecuta la solicitud de los datos de las personas cercanas
+	collection := common.Client.Database(common.DATABASE).Collection(product)
+
+	tmpIot := iotLigth{}
+	if err := collection.FindOne(ctx, query).Decode(&tmpIot); err != nil {
+		return 1000
+	}
+
+	// regresamos las personas que hicieron contacto
+	return iot.distance(&tmpIot)
+}
+
 // Upsert actualización de la data de iot en mongo
 // db.covid19.createIndex( { "d": 1 } )
-func (iot *Iot) Upsert(product string) error {
+func (iot *Iot) Upsert(product string, config *Config) error {
+	distance := iot.mustInsert(product)
+
 	// contexto timeout para la solicitud a mongo
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -37,6 +84,11 @@ func (iot *Iot) Upsert(product string) error {
 	res, err := collection.UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
 	if err != nil {
 		return err
+	}
+
+	// si no ha salido de su zona inicial retornamos (ahorramos espacio)
+	if distance < config.Accuracy {
+		return nil
 	}
 
 	// se elimina el cliente para optimizar espacio pero se almacena para restituir en caso de
@@ -61,16 +113,13 @@ func (iot *Iot) Upsert(product string) error {
 // Near obtenemos los devices cercanos y actualizamos los contactos
 // db.covid19.createIndex({ "data.coor" : "2dsphere" })
 // db.locations.createIndex({ "data.coor" : "2dsphere" })
-func (iot *Iot) Near(product string) ([]Iot, error) {
+func (iot *Iot) Near(product string, config *Config) ([]Iot, error) {
 	// data empaquetada que envió el usuario necesitamos las coordenadas para determinar
 	// las personas cercanas de la tabla de usuarios
 	data := iot.Data.(map[string]interface{})
 	// contexto timeout para la solicitud a mongo
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-
-	config := Config{}
-	config.GetConfig()
 
 	// verificamos que la emisión solo haya sido hasta hace dos minutos
 	t := time.Now().UTC()
@@ -137,16 +186,13 @@ func (iot *Iot) InsertContact(iots *[]Iot) {
 }
 
 // NearPlaces obtenemos los places cercanos y actualizamos los contacts_places
-func (iot *Iot) NearPlaces(product string) ([]Place, error) {
+func (iot *Iot) NearPlaces(product string, config *Config) ([]Place, error) {
 	// data empaquetada que envió el usuario necesitamos las coordenadas para determinar
 	// los lugares cercanos de la tabla de places
 	data := iot.Data.(map[string]interface{})
 	// contexto timeout para la solicitud a mongo
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-
-	config := Config{}
-	config.GetConfig()
 
 	// la última posición de la ubicacion es tenida en cuenta hasta por 72 horas
 	t := time.Now().UTC()

@@ -44,15 +44,18 @@ func postIotHandler(c *fasthttp.RequestCtx) {
 	iot.Created = time.Now().UTC() // hora de registro en el sistema
 	iot.Data = data
 
+	config := models.Config{}
+	config.GetConfig()
+
 	// actualizamos el mapa de tics para la ubicación
-	if err = iot.Upsert(origin.Product); err != nil {
+	if err = iot.Upsert(origin.Product, &config); err != nil {
 		common.SendJSON(c, &bson.M{"err": err.Error()})
 		return
 	}
 
 	// buscamos las personas en rango
 	var iots []models.Iot
-	if iots, err = iot.Near(origin.Product); err != nil {
+	if iots, err = iot.Near(origin.Product, &config); err != nil {
 		common.SendJSON(c, &bson.M{"err": err.Error()})
 		return
 	}
@@ -64,7 +67,7 @@ func postIotHandler(c *fasthttp.RequestCtx) {
 
 	// buscamos las localizaciones en rango
 	var places []models.Place
-	if places, err = iot.NearPlaces(origin.Product); err != nil {
+	if places, err = iot.NearPlaces(origin.Product, &config); err != nil {
 		common.SendJSON(c, &bson.M{"err": err.Error()})
 		return
 	}
