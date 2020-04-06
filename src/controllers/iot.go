@@ -48,7 +48,7 @@ func postIotHandler(c *fasthttp.RequestCtx) {
 	config.GetConfig()
 
 	// actualizamos el mapa de tics para la ubicación
-	if err = iot.Upsert(origin.Product, &config); err != nil {
+	if err = iot.Upsert(origin.Product); err != nil {
 		common.SendJSON(c, &bson.M{"err": err.Error()})
 		return
 	}

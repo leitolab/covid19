@@ -67,7 +67,7 @@ func (iot *Iot) mustInsert(product string) float64 {
 
 // Upsert actualización de la data de iot en mongo
 // db.covid19.createIndex( { "d": 1 } )
-func (iot *Iot) Upsert(product string, config *Config) error {
+func (iot *Iot) Upsert(product string) error {
 	distance := iot.mustInsert(product)
 
 	// contexto timeout para la solicitud a mongo
@@ -87,7 +87,7 @@ func (iot *Iot) Upsert(product string, config *Config) error {
 	}
 
 	// si no ha salido de su zona inicial retornamos (ahorramos espacio)
-	if distance < config.Accuracy {
+	if distance < 10 {
 		return nil
 	}
 
