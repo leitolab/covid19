@@ -52,7 +52,7 @@ func main() {
 	}
 }
 
-// Router del sistema dado que no se manejara un gran grupo de rutas esta solución es suficiente y eficiente
+// Router del sistema ha crecido por necesidad necesita revisión
 func mainHandler(c *fasthttp.RequestCtx) {
 	path := c.Path()
 	switch *(*string)(unsafe.Pointer(&path)) {
@@ -66,6 +66,7 @@ func mainHandler(c *fasthttp.RequestCtx) {
 	case "/rest/v1/people/":
 		controllers.PeopleHandler(c)
 
+	// este endpoint no deberia ser reemplazado, usado por mala implementacion
 	case "/rest/v1/route2/":
 		controllers.Route2Handler(c)
 
